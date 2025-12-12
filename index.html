@@ -164,6 +164,46 @@ tr:nth-child(even) {
     <td contenteditable="true"></td>
   </tr>
 </table>
+  
+<script>
+// Build table rows from 8:00 to 20:00
+const table = document.getElementById("schedule");
+for (let hour = 8; hour <= 20; hour++) {
+  const tr = document.createElement("tr");
+
+  // Timeslot column (not editable)
+  const tdTime = document.createElement("td");
+  tdTime.textContent = hour + ":00";
+  tdTime.contentEditable = "false";
+  tr.appendChild(tdTime);
+
+  // Editable day columns
+  for (let i = 0; i < 7; i++) {
+    const td = document.createElement("td");
+    td.contentEditable = "true";
+    td.dataset.row = hour;
+    td.dataset.col = i;
+    tr.appendChild(td);
+  }
+  table.appendChild(tr);
+}
+
+// Load saved data from localStorage
+const savedData = JSON.parse(localStorage.getItem("scheduleData") || "{}");
+for (const key in savedData) {
+  const cell = table.querySelector(`td[data-row='${key.split("-")[0]}'][data-col='${key.split("-")[1]}']`);
+  if (cell) cell.textContent = savedData[key];
+}
+
+// Save edits to localStorage automatically
+table.addEventListener("input", (e) => {
+  if (e.target.tagName === "TD" && e.target.contentEditable === "true") {
+    const key = `${e.target.dataset.row}-${e.target.dataset.col}`;
+    savedData[key] = e.target.textContent;
+    localStorage.setItem("scheduleData", JSON.stringify(savedData));
+  }
+});
+</script>
 
 </body>
 </html>
