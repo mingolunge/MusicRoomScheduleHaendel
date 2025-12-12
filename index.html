@@ -23,7 +23,7 @@ tr:nth-child(even) {
 
 <h2>Music Room Schedule</h2>
 
-<table>
+<table id="schedule">
   <tr>
     <th>Timeslot</th>
     <th>Mon</th>
@@ -34,10 +34,12 @@ tr:nth-child(even) {
     <th>Sat</th>
     <th>Sun</th>
   </tr>
+  <!-- Example row -->
   <tr>
     <td>8:00</td>
     <td contenteditable="true"></td>
-    <td contenteditable="true"><td>
+    <td contenteditable="true"></td>
+    <td contenteditable="true"></td>
     <td contenteditable="true"></td>
     <td contenteditable="true"></td>
     <td contenteditable="true"></td>
@@ -53,155 +55,24 @@ tr:nth-child(even) {
     <td contenteditable="true"></td>
     <td contenteditable="true"></td>
   </tr>
-  <tr>
-    <td>10:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>11:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>12:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>13:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td contenteditable="true">14:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>15:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>16:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>17:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>18:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>19:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
-  <tr>
-    <td>20:00</td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-    <td contenteditable="true"></td>
-  </tr>
+  <!-- Add the rest of your rows here -->
 </table>
-  
+
 <script>
-// Build table rows from 8:00 to 20:00
-const table = document.getElementById("schedule");
-for (let hour = 8; hour <= 20; hour++) {
-  const tr = document.createElement("tr");
+// Load saved content from localStorage
+document.addEventListener('DOMContentLoaded', () => {
+  const table = document.getElementById('schedule');
+  const cells = table.querySelectorAll('td[contenteditable="true"]');
 
-  // Timeslot column (not editable)
-  const tdTime = document.createElement("td");
-  tdTime.textContent = hour + ":00";
-  tdTime.contentEditable = "false";
-  tr.appendChild(tdTime);
+  cells.forEach((cell, index) => {
+    const saved = localStorage.getItem('cell_' + index);
+    if (saved) cell.innerText = saved;
 
-  // Editable day columns
-  for (let i = 0; i < 7; i++) {
-    const td = document.createElement("td");
-    td.contentEditable = "true";
-    td.dataset.row = hour;
-    td.dataset.col = i;
-    tr.appendChild(td);
-  }
-  table.appendChild(tr);
-}
-
-// Load saved data from localStorage
-const savedData = JSON.parse(localStorage.getItem("scheduleData") || "{}");
-for (const key in savedData) {
-  const cell = table.querySelector(`td[data-row='${key.split("-")[0]}'][data-col='${key.split("-")[1]}']`);
-  if (cell) cell.textContent = savedData[key];
-}
-
-// Save edits to localStorage automatically
-table.addEventListener("input", (e) => {
-  if (e.target.tagName === "TD" && e.target.contentEditable === "true") {
-    const key = `${e.target.dataset.row}-${e.target.dataset.col}`;
-    savedData[key] = e.target.textContent;
-    localStorage.setItem("scheduleData", JSON.stringify(savedData));
-  }
+    // Save changes to localStorage on input
+    cell.addEventListener('input', () => {
+      localStorage.setItem('cell_' + index, cell.innerText);
+    });
+  });
 });
 </script>
 
