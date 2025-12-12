@@ -2,19 +2,10 @@
 <html>
 <head>
 <style>
-table {
-  font-family: NerdMono, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-td, th {
-  border: 1px solid #dddddd;
-  text-align: center;
-  padding: 8px;
-}
-tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
+table { border-collapse: collapse; width: 100%; font-family: NerdMono, sans-serif; }
+td, th { border: 1px solid #dddddd; text-align: center; padding: 8px; }
+tr:nth-child(even) { background-color: #f2f2f2; }
+td[contenteditable="true"] { background-color: #ffffe0; }
 </style>
 </head>
 <body>
@@ -22,73 +13,51 @@ tr:nth-child(even) {
 <h2>Music Room Schedule</h2>
 
 <table id="schedule">
-  <tr>
-    <th>Timeslot</th>
-    <th>Mon</th>
-    <th>Tue</th>
-    <th>Wed</th>
-    <th>Thu</th>
-    <th>Fri</th>
-    <th>Sat</th>
-    <th>Sun</th>
-  </tr>
-  <!-- Rows will be inserted dynamically -->
+  <tr id="header-row"></tr>
+  <!-- Data rows will be inserted dynamically -->
 </table>
 
+<!-- Include PapaParse -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 <script>
-// Default schedule
-const times = ['8:00','9:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
-const days = 7;
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjtwpRvMpT2lzyEwaO88cN317BgNH1C90SL_HMcGqT2gXbbNl3xwpK-9cS_iuY72m1hxvz28k3riLr/pub?output=csv';
 const table = document.getElementById('schedule');
 
-let schedule = [];
-
-// Load schedule from server
 async function loadSchedule() {
-  const res = await fetch('/api/schedule');
-  schedule = await res.json();
+    const res = await fetch(CSV_URL);
+    const csvText = await res.text();
+    const data = Papa.parse(csvText).data;
 
-  // If empty, create default
-  if(schedule.length === 0) {
-    schedule = times.map(time => Array(days).fill(''));
-  }
-
-  renderTable();
-}
-
-// Render table
-function renderTable() {
-  // Remove old rows
-  table.querySelectorAll('tr:not(:first-child)').forEach(r => r.remove());
-
-  schedule.forEach((row, rowIndex) => {
-    const tr = document.createElement('tr');
-    const timeCell = document.createElement('td');
-    timeCell.innerText = times[rowIndex];
-    tr.appendChild(timeCell);
-
-    row.forEach((cell, colIndex) => {
-      const td = document.createElement('td');
-      td.contentEditable = "true";
-      td.innerText = cell;
-      td.addEventListener('input', () => {
-        schedule[rowIndex][colIndex] = td.innerText;
-        saveSchedule();
-      });
-      tr.appendChild(td);
+    // Render header
+    table.innerHTML = '';
+    const headerRow = document.createElement('tr');
+    data[0].forEach(h => {
+        const th = document.createElement('th');
+        th.innerText = h;
+        headerRow.appendChild(th);
     });
+    table.appendChild(headerRow);
 
-    table.appendChild(tr);
-  });
-}
+    // Render data rows
+    data.slice(1).forEach((row, rowIndex) => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, colIndex) => {
+            const td = document.createElement('td');
+            td.contentEditable = colIndex === 0 ? false : true; // Make timeslot not editable
+            td.innerText = cell;
+            td.addEventListener('input', () => {
+                // Optional: save edits locally (cannot write to Google Sheet directly)
+                localStorage.setItem(`cell_${rowIndex}_${colIndex}`, td.innerText);
+            });
+            // Load saved localStorage edits
+            const saved = localStorage.getItem(`cell_${rowIndex}_${colIndex}`);
+            if(saved) td.innerText = saved;
 
-// Save schedule to server
-async function saveSchedule() {
-  await fetch('/api/schedule', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(schedule)
-  });
+            tr.appendChild(td);
+        });
+        table.appendChild(tr);
+    });
 }
 
 loadSchedule();
